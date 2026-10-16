@@ -1,0 +1,1694 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UniQuest Pro: Course & Semester Leaderboard Hub</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#312e81',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- Tone.js for Ambient Audio Synthesizer -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+  <style>
+    /* Glassmorphism custom styles */
+    .glass-card {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-card-hover:hover {
+      background: rgba(30, 41, 59, 0.85);
+      border-color: rgba(99, 102, 241, 0.3);
+      transform: translateY(-2px);
+      transition: all 0.2s ease-in-out;
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #f472b6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .gold-gradient {
+      background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+    }
+    .silver-gradient {
+      background: linear-gradient(135deg, #94a3b8 0%, #cbd5e1 100%);
+    }
+    .bronze-gradient {
+      background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(99, 102, 241, 0.4);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(99, 102, 241, 0.8);
+    }
+  </style>
+</head>
+<body class="h-full font-sans antialiased selection:bg-brand-500 selection:text-white">
+
+  <!-- Root App Container -->
+  <div id="app" class="flex h-screen overflow-hidden">
+    
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="w-64 bg-slate-900/90 border-r border-slate-800 flex flex-col justify-between transition-all duration-300 z-30 shrink-0">
+      <div>
+        <!-- Logo -->
+        <div class="h-16 flex items-center px-6 border-b border-slate-800/80 gap-3">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-purple-500 flex items-center justify-center text-white shadow-lg shadow-brand-500/30">
+            <i class="fa-solid font-bold fa-graduation-cap text-lg"></i>
+          </div>
+          <div>
+            <h1 class="font-extrabold text-lg tracking-tight gradient-text">UniQuest Pro</h1>
+            <p class="text-[10px] text-slate-400 font-medium tracking-wider uppercase">Leaderboard Hub</p>
+          </div>
+        </div>
+
+        <!-- Navigation Links (Disabled when not signed in/set up) -->
+        <nav id="sidebar-nav-links" class="p-4 space-y-1.5 opacity-40 pointer-events-none">
+          <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all text-white bg-brand-600/30 border border-brand-500/30">
+            <i class="fa-solid fa-chart-pie w-5 text-brand-400"></i>
+            <span>Dashboard</span>
+          </button>
+          
+          <button onclick="switchTab('leaderboard')" id="nav-leaderboard" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all text-slate-400 hover:bg-slate-800/60 hover:text-white">
+            <i class="fa-solid fa-trophy w-5 text-amber-400"></i>
+            <span>Leaderboards</span>
+            <span id="rank-badge-nav" class="ml-auto text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">#--</span>
+          </button>
+
+          <button onclick="switchTab('academic')" id="nav-academic" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all text-slate-400 hover:bg-slate-800/60 hover:text-white">
+            <i class="fa-solid fa-brain w-5 text-indigo-400"></i>
+            <span>Academic & Focus</span>
+          </button>
+
+          <button onclick="switchTab('budget')" id="nav-budget" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all text-slate-400 hover:bg-slate-800/60 hover:text-white">
+            <i class="fa-solid fa-wallet w-5 text-emerald-400"></i>
+            <span>Budget & Expenses</span>
+          </button>
+
+          <button onclick="switchTab('habits')" id="nav-habits" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all text-slate-400 hover:bg-slate-800/60 hover:text-white">
+            <i class="fa-solid fa-check-double w-5 text-rose-400"></i>
+            <span>Habits & Notes</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Quick Profile Card in Sidebar Footer -->
+      <div class="p-4 border-t border-slate-800/80 bg-slate-900/50">
+        <div id="auth-unauthenticated" class="text-center py-2">
+          <button onclick="signInWithGoogle()" class="w-full py-2.5 px-4 bg-white hover:bg-slate-100 text-slate-900 rounded-xl font-semibold text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-white/10">
+            <i class="fa-brands fa-google text-rose-500 text-sm"></i>
+            <span>Sign in with Google</span>
+          </button>
+        </div>
+
+        <div id="auth-authenticated" class="hidden">
+          <div class="flex items-center gap-3">
+            <img id="user-avatar" src="https://placehold.co/100x100/4f46e5/ffffff?text=U" alt="Avatar" class="w-10 h-10 rounded-xl ring-2 ring-brand-500/50 object-cover">
+            <div class="overflow-hidden flex-1">
+              <h4 id="user-display-name" class="font-bold text-xs text-slate-100 truncate">Student Name</h4>
+              <p id="user-email" class="text-[10px] text-slate-400 truncate">student@uni.edu</p>
+              <div class="flex items-center gap-1 mt-1">
+                <span class="text-[10px] font-semibold text-amber-400 flex items-center gap-1">
+                  <i class="fa-solid fa-bolt text-amber-400"></i>
+                  <span id="user-xp-nav">0 XP</span>
+                </span>
+                <span class="text-slate-600">•</span>
+                <span id="user-level-badge" class="text-[9px] bg-brand-500/20 text-brand-300 px-1.5 py-0.2 rounded font-mono">Lvl 1</span>
+              </div>
+            </div>
+            <button onclick="handleSignOut()" title="Sign Out" class="text-slate-400 hover:text-rose-400 p-1.5 transition">
+              <i class="fa-solid fa-right-from-bracket text-sm"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col min-w-0 bg-slate-950 overflow-y-auto relative">
+      
+      <!-- Top Bar -->
+      <header class="h-16 border-b border-slate-800/80 px-6 flex items-center justify-between sticky top-0 bg-slate-950/80 backdrop-blur-md z-20">
+        <div class="flex items-center gap-4">
+          <h2 id="page-title" class="text-lg font-bold text-slate-100">Welcome to UniQuest Pro</h2>
+        </div>
+
+        <!-- Academic Context Quick Picker Header -->
+        <div class="flex items-center gap-3">
+          <div id="header-selectors-container" class="hidden md:flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-xl p-1 px-3 text-xs opacity-50 pointer-events-none">
+            <i class="fa-solid fa-graduation-cap text-brand-400"></i>
+            <select id="course-selector-top" onchange="updateAcademicSettings()" class="bg-transparent text-slate-200 focus:outline-none cursor-pointer font-medium">
+              <option value="Computer Science" class="bg-slate-900 text-slate-200">Computer Science</option>
+              <option value="Software Engineering" class="bg-slate-900 text-slate-200">Software Engineering</option>
+              <option value="Data Science" class="bg-slate-900 text-slate-200">Data Science</option>
+              <option value="Business Administration" class="bg-slate-900 text-slate-200">Business Administration</option>
+              <option value="Electrical Engineering" class="bg-slate-900 text-slate-200">Electrical Engineering</option>
+              <option value="Law" class="bg-slate-900 text-slate-200">Law</option>
+              <option value="Medicine" class="bg-slate-900 text-slate-200">Medicine</option>
+            </select>
+            <span class="text-slate-700">|</span>
+            <select id="semester-selector-top" onchange="updateAcademicSettings()" class="bg-transparent text-slate-200 focus:outline-none cursor-pointer font-medium">
+              <option value="Semester 1" class="bg-slate-900 text-slate-200">Semester 1</option>
+              <option value="Semester 2" class="bg-slate-900 text-slate-200">Semester 2</option>
+              <option value="Semester 3" class="bg-slate-900 text-slate-200">Semester 3</option>
+              <option value="Semester 4" class="bg-slate-900 text-slate-200">Semester 4</option>
+              <option value="Semester 5" class="bg-slate-900 text-slate-200">Semester 5</option>
+              <option value="Semester 6" class="bg-slate-900 text-slate-200">Semester 6</option>
+              <option value="Semester 7" class="bg-slate-900 text-slate-200">Semester 7</option>
+              <option value="Semester 8" class="bg-slate-900 text-slate-200">Semester 8</option>
+            </select>
+          </div>
+
+          <!-- Auth Header Action -->
+          <button id="top-auth-btn" onclick="signInWithGoogle()" class="py-2 px-4 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-medium text-xs transition flex items-center gap-2 shadow-lg shadow-brand-500/20">
+            <i class="fa-brands fa-google"></i>
+            <span>Google Sign In</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Welcome / Setup Gate Overlay (Blank until configured) -->
+      <div id="setup-gate-overlay" class="absolute inset-0 z-40 bg-slate-950/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center">
+        <div class="max-w-md w-full glass-card p-8 rounded-3xl space-y-6 border border-brand-500/30 shadow-2xl">
+          <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-600 to-purple-500 mx-auto flex items-center justify-center text-white shadow-xl shadow-brand-500/30">
+            <i class="fa-solid fa-graduation-cap text-2xl"></i>
+          </div>
+          
+          <div class="space-y-2">
+            <h2 class="text-2xl font-black text-white gradient-text">Welcome to UniQuest Pro</h2>
+            <p id="gate-subtitle" class="text-slate-400 text-xs">
+              Please sign in with Google or continue as guest to configure your course and semester leaderboard hub.
+            </p>
+          </div>
+
+          <!-- Step 1: Sign In Button in Gate -->
+          <div id="gate-step-signin" class="space-y-3">
+            <button onclick="signInWithGoogle()" class="w-full py-3 px-4 bg-white hover:bg-slate-100 text-slate-900 rounded-xl font-bold text-xs transition flex items-center justify-center gap-2 shadow-lg">
+              <i class="fa-brands fa-google text-rose-500 text-sm"></i>
+              <span>Sign in with Google</span>
+            </button>
+            <button onclick="proceedAsGuest()" class="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl font-semibold text-xs transition border border-slate-800">
+              Continue as Guest
+            </button>
+          </div>
+
+          <!-- Step 2: Academic Setup Form (Hidden until signed in) -->
+          <div id="gate-step-setup" class="space-y-4 hidden text-left pt-2 border-t border-slate-800">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-brand-400 text-center">Configure Your Academic Profile</h3>
+            
+            <div class="space-y-1.5">
+              <label class="text-[10px] uppercase font-semibold text-slate-400 block">Your Full Name / Scholar Alias</label>
+              <input type="text" id="setup-name-input" placeholder="e.g. Alex Rivera" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="text-[10px] uppercase font-semibold text-slate-400 block">Select Course Program</label>
+              <select id="setup-course-input" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                <option value="Computer Science">Computer Science</option>
+                <option value="Software Engineering">Software Engineering</option>
+                <option value="Data Science">Data Science</option>
+                <option value="Business Administration">Business Administration</option>
+                <option value="Electrical Engineering">Electrical Engineering</option>
+                <option value="Law">Law</option>
+                <option value="Medicine">Medicine</option>
+              </select>
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="text-[10px] uppercase font-semibold text-slate-400 block">Select Current Semester</label>
+              <select id="setup-semester-input" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                <option value="Semester 1">Semester 1</option>
+                <option value="Semester 2">Semester 2</option>
+                <option value="Semester 3">Semester 3</option>
+                <option value="Semester 4">Semester 4</option>
+                <option value="Semester 5">Semester 5</option>
+                <option value="Semester 6">Semester 6</option>
+                <option value="Semester 7">Semester 7</option>
+                <option value="Semester 8">Semester 8</option>
+              </select>
+            </div>
+
+            <button onclick="completeSetupAndLaunch()" class="w-full py-3 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-brand-500/30 mt-2">
+              Launch Leaderboard Hub <i class="fa-solid fa-arrow-right ml-1"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 1: DASHBOARD -->
+      <section id="tab-dashboard" class="tab-content p-6 space-y-6">
+        
+        <!-- Welcome Hero Banner -->
+        <div class="glass-card rounded-2xl p-6 relative overflow-hidden border border-brand-500/20 bg-gradient-to-r from-slate-900 via-brand-950/40 to-slate-900">
+          <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div class="space-y-2">
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-300 text-xs font-semibold">
+                <i class="fa-solid fa-fire text-amber-400"></i>
+                <span id="hero-course-sem-label">Computer Science • Semester 1</span>
+              </div>
+              <h2 class="text-2xl md:text-3xl font-extrabold text-white">
+                Welcome back, <span id="hero-user-name" class="gradient-text">Scholar</span>!
+              </h2>
+              <p class="text-slate-400 text-sm max-w-xl">
+                Compete with your cohort, stay top of your study goals, manage budget limits, and level up your academic rank in real time.
+              </p>
+            </div>
+
+            <!-- Rank & XP Summary Card -->
+            <div class="flex items-center gap-4 bg-slate-900/80 border border-slate-800 p-4 rounded-xl shrink-0">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center text-slate-950 font-black text-2xl shadow-lg shadow-amber-500/20">
+                <i class="fa-solid fa-crown text-2xl"></i>
+              </div>
+              <div>
+                <p class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Cohort Rank</p>
+                <h3 id="hero-rank-display" class="text-2xl font-black text-white">#1</h3>
+                <p class="text-[11px] text-amber-400 font-medium"><span id="hero-xp-display">0</span> total XP</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 Quick Stats Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Stat 1: Level Progress -->
+          <div class="glass-card p-5 rounded-2xl space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold uppercase text-slate-400">Level Rank</span>
+              <div class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-sm">
+                <i class="fa-solid fa-award"></i>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between items-baseline mb-1">
+                <span id="dash-level-title" class="text-lg font-bold text-white">Level 1: Freshman</span>
+                <span id="dash-level-num" class="text-xs font-mono text-indigo-400">Lvl 1</span>
+              </div>
+              <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                <div id="dash-xp-progress-bar" class="bg-indigo-500 h-2 rounded-full transition-all duration-500" style="width: 15%"></div>
+              </div>
+              <p id="dash-xp-next" class="text-[10px] text-slate-400 mt-1.5">150 XP to Level 2</p>
+            </div>
+          </div>
+
+          <!-- Stat 2: Daily Streak -->
+          <div class="glass-card p-5 rounded-2xl space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold uppercase text-slate-400">Study Streak</span>
+              <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center text-sm">
+                <i class="fa-solid fa-flame"></i>
+              </div>
+            </div>
+            <div>
+              <div class="flex items-baseline gap-2">
+                <span id="dash-streak-count" class="text-2xl font-black text-white">3 Days</span>
+                <span class="text-xs text-emerald-400 font-medium">+50 XP/day</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">Keep studying daily to maintain momentum!</p>
+            </div>
+          </div>
+
+          <!-- Stat 3: Budget Snapshot -->
+          <div class="glass-card p-5 rounded-2xl space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold uppercase text-slate-400">Budget Limit</span>
+              <div id="budget-status-icon" class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-sm">
+                <i class="fa-solid fa-wallet"></i>
+              </div>
+            </div>
+            <div>
+              <div class="flex items-baseline gap-2">
+                <span id="dash-budget-remaining" class="text-2xl font-black text-white">$42.50</span>
+                <span class="text-xs text-slate-400">left today</span>
+              </div>
+              <p id="dash-budget-warning" class="text-xs text-emerald-400 mt-1 font-medium"><i class="fa-solid fa-circle-check"></i> Within daily limit</p>
+            </div>
+          </div>
+
+          <!-- Stat 4: Target GPA -->
+          <div class="glass-card p-5 rounded-2xl space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold uppercase text-slate-400">Current CGPA</span>
+              <div class="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-400 flex items-center justify-center text-sm">
+                <i class="fa-solid fa-graduation-cap"></i>
+              </div>
+            </div>
+            <div>
+              <div class="flex items-baseline gap-2">
+                <span id="dash-gpa-display" class="text-2xl font-black text-white">3.85</span>
+                <span class="text-xs text-slate-400">/ 4.00</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">Honors Standing Tier</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Two Column Dashboard Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- Left Column: Tasks & Eisenhower Overview -->
+          <div class="lg:col-span-2 glass-card rounded-2xl p-6 space-y-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <i class="fa-solid fa-list-check text-brand-400"></i>
+                <h3 class="font-bold text-slate-100">Priority Assignments & Tasks</h3>
+              </div>
+              <button onclick="switchTab('academic')" class="text-xs text-brand-400 hover:text-brand-300 font-medium">Manage All &rarr;</button>
+            </div>
+
+            <!-- Priority Quick List -->
+            <div id="dash-tasks-container" class="space-y-2.5">
+              <!-- Dynamically Populated -->
+            </div>
+          </div>
+
+          <!-- Right Column: Cohort Leaderboard Preview -->
+          <div class="glass-card rounded-2xl p-6 space-y-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <i class="fa-solid fa-trophy text-amber-400"></i>
+                <h3 class="font-bold text-slate-100">Cohort Top 3</h3>
+              </div>
+              <button onclick="switchTab('leaderboard')" class="text-xs text-brand-400 hover:text-brand-300 font-medium">Full Leaderboard &rarr;</button>
+            </div>
+
+            <div id="dash-top-students-list" class="space-y-3">
+              <!-- Dynamic top 3 list -->
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- TAB 2: REAL-TIME LEADERBOARD -->
+      <section id="tab-leaderboard" class="tab-content p-6 space-y-6 hidden">
+        
+        <!-- Header & Filter Tabs -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-card p-6 rounded-2xl">
+          <div>
+            <h2 class="text-2xl font-extrabold text-white flex items-center gap-3">
+              <i class="fa-solid fa-trophy text-amber-400"></i>
+              Real-Time Cohort Leaderboard
+            </h2>
+            <p class="text-slate-400 text-sm mt-1">Students in your course and semester earn XP through focus study sessions, task completions, and habit streaks.</p>
+          </div>
+
+          <!-- Leaderboard Scope Filter Switcher -->
+          <div class="flex items-center p-1 bg-slate-900 border border-slate-800 rounded-xl">
+            <button onclick="setLeaderboardScope('semester')" id="scope-btn-semester" class="px-4 py-2 text-xs font-semibold rounded-lg transition bg-brand-600 text-white">
+              My Semester
+            </button>
+            <button onclick="setLeaderboardScope('course')" id="scope-btn-course" class="px-4 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">
+              Course-Wide
+            </button>
+            <button onclick="setLeaderboardScope('global')" id="scope-btn-global" class="px-4 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">
+              Global Campus
+            </button>
+          </div>
+        </div>
+
+        <!-- Top 3 Podium Cards -->
+        <div id="leaderboard-podium" class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+          <!-- Silver 2nd Place -->
+          <div id="podium-2" class="glass-card p-6 rounded-2xl flex flex-col items-center text-center relative border border-slate-700/50 order-2 md:order-1">
+            <div class="w-10 h-10 rounded-full silver-gradient flex items-center justify-center font-black text-slate-950 text-sm absolute -top-4 shadow-lg">2</div>
+            <img id="podium-2-img" src="https://placehold.co/100x100/334155/ffffff?text=2" class="w-20 h-20 rounded-full border-4 border-slate-400 my-2 object-cover">
+            <h4 id="podium-2-name" class="font-bold text-white text-base">Searching...</h4>
+            <span id="podium-2-course" class="text-xs text-slate-400 mb-2">Semester --</span>
+            <div class="px-3 py-1 rounded-full bg-slate-800 text-slate-200 text-xs font-bold font-mono border border-slate-700">
+              <span id="podium-2-xp">0</span> XP
+            </div>
+          </div>
+
+          <!-- Gold 1st Place -->
+          <div id="podium-1" class="glass-card p-6 rounded-2xl flex flex-col items-center text-center relative border border-amber-500/40 bg-gradient-to-b from-amber-500/10 to-slate-900/80 order-1 md:order-2 transform md:-translate-y-2">
+            <div class="w-12 h-12 rounded-full gold-gradient flex items-center justify-center font-black text-slate-950 text-base absolute -top-5 shadow-lg shadow-amber-500/30">
+              <i class="fa-solid fa-crown"></i>
+            </div>
+            <img id="podium-1-img" src="https://placehold.co/100x100/f59e0b/ffffff?text=1" class="w-24 h-24 rounded-full border-4 border-amber-400 my-2 object-cover shadow-xl shadow-amber-500/20">
+            <h4 id="podium-1-name" class="font-extrabold text-white text-lg gradient-text">Searching...</h4>
+            <span id="podium-1-course" class="text-xs text-slate-400 mb-2">Semester --</span>
+            <div class="px-4 py-1.5 rounded-full bg-amber-500/20 text-amber-300 text-sm font-black font-mono border border-amber-500/40">
+              <span id="podium-1-xp">0</span> XP
+            </div>
+          </div>
+
+          <!-- Bronze 3rd Place -->
+          <div id="podium-3" class="glass-card p-6 rounded-2xl flex flex-col items-center text-center relative border border-slate-700/50 order-3">
+            <div class="w-10 h-10 rounded-full bronze-gradient flex items-center justify-center font-black text-slate-950 text-sm absolute -top-4 shadow-lg">3</div>
+            <img id="podium-3-img" src="https://placehold.co/100x100/b45309/ffffff?text=3" class="w-20 h-20 rounded-full border-4 border-amber-700 my-2 object-cover">
+            <h4 id="podium-3-name" class="font-bold text-white text-base">Searching...</h4>
+            <span id="podium-3-course" class="text-xs text-slate-400 mb-2">Semester --</span>
+            <div class="px-3 py-1 rounded-full bg-slate-800 text-slate-200 text-xs font-bold font-mono border border-slate-700">
+              <span id="podium-3-xp">0</span> XP
+            </div>
+          </div>
+        </div>
+
+        <!-- Leaderboard Table -->
+        <div class="glass-card rounded-2xl overflow-hidden">
+          <div class="p-4 border-b border-slate-800 bg-slate-900/50 flex justify-between items-center">
+            <h3 class="font-bold text-sm text-slate-200" id="leaderboard-table-title">Full Cohort Leaderboard</h3>
+            <span class="text-xs text-slate-400" id="leaderboard-count">0 Students Ranked</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-900/80 text-slate-400 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-800">
+                <tr>
+                  <th class="p-4 w-16 text-center">Rank</th>
+                  <th class="p-4">Student</th>
+                  <th class="p-4">Course & Semester</th>
+                  <th class="p-4 text-center">Level</th>
+                  <th class="p-4 text-center">Streak</th>
+                  <th class="p-4 text-right">Total XP</th>
+                </tr>
+              </thead>
+              <tbody id="leaderboard-table-body" class="divide-y divide-slate-800/60 font-medium">
+                <!-- Dynamically generated rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: ACADEMIC & FOCUS HUB -->
+      <section id="tab-academic" class="tab-content p-6 space-y-6 hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- Column 1 & 2: Eisenhower Matrix & Task Priority -->
+          <div class="lg:col-span-2 space-y-6">
+            
+            <!-- Eisenhower Matrix Container -->
+            <div class="glass-card p-6 rounded-2xl space-y-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="font-extrabold text-white text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-brand-400"></i>
+                    Eisenhower Priority Task Matrix
+                  </h3>
+                  <p class="text-xs text-slate-400">Add course assignments and earn +25 XP when completed.</p>
+                </div>
+                <button onclick="openAddTaskModal()" class="py-2 px-3 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-medium text-xs transition flex items-center gap-1.5 shadow-lg shadow-brand-500/20">
+                  <i class="fa-solid fa-plus"></i> Add Task
+                </button>
+              </div>
+
+              <!-- Matrix 2x2 Grid -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Urgent & Important -->
+                <div class="bg-rose-950/20 border border-rose-500/20 p-4 rounded-xl space-y-3">
+                  <div class="flex justify-between items-center text-rose-400 font-bold text-xs uppercase tracking-wider">
+                    <span>🔥 Do First (Urgent)</span>
+                    <span id="count-urgent" class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300">0</span>
+                  </div>
+                  <div id="list-urgent" class="space-y-2 min-h-[100px]"></div>
+                </div>
+
+                <!-- High Priority -->
+                <div class="bg-amber-950/20 border border-amber-500/20 p-4 rounded-xl space-y-3">
+                  <div class="flex justify-between items-center text-amber-400 font-bold text-xs uppercase tracking-wider">
+                    <span>⚡ Schedule (High)</span>
+                    <span id="count-high" class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">0</span>
+                  </div>
+                  <div id="list-high" class="space-y-2 min-h-[100px]"></div>
+                </div>
+
+                <!-- Medium Priority -->
+                <div class="bg-indigo-950/20 border border-indigo-500/20 p-4 rounded-xl space-y-3">
+                  <div class="flex justify-between items-center text-indigo-400 font-bold text-xs uppercase tracking-wider">
+                    <span>📘 Delegate / Quick (Medium)</span>
+                    <span id="count-medium" class="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300">0</span>
+                  </div>
+                  <div id="list-medium" class="space-y-2 min-h-[100px]"></div>
+                </div>
+
+                <!-- Low Priority -->
+                <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-3">
+                  <div class="flex justify-between items-center text-slate-400 font-bold text-xs uppercase tracking-wider">
+                    <span>☕ Low Priority</span>
+                    <span id="count-low" class="px-2 py-0.5 rounded bg-slate-800 text-slate-300">0</span>
+                  </div>
+                  <div id="list-low" class="space-y-2 min-h-[100px]"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- GPA Calculator -->
+            <div class="glass-card p-6 rounded-2xl space-y-4">
+              <h3 class="font-bold text-white text-base flex items-center gap-2">
+                <i class="fa-solid fa-calculator text-emerald-400"></i>
+                Semester GPA & CGPA Predictor
+              </h3>
+
+              <div id="gpa-courses-list" class="space-y-3">
+                <!-- Dynamically populated course GPA rows -->
+              </div>
+
+              <div class="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-800">
+                <button onclick="addGPACourseRow()" class="text-xs text-brand-400 hover:text-brand-300 font-medium flex items-center gap-1">
+                  <i class="fa-solid fa-plus-circle"></i> Add Course Grade
+                </button>
+                <div class="flex items-center gap-4">
+                  <div class="text-right">
+                    <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Calculated GPA</span>
+                    <span id="calculated-gpa" class="text-xl font-black text-emerald-400">3.85</span>
+                  </div>
+                  <button onclick="saveGPAToProfile()" class="py-2 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold transition shadow-lg shadow-emerald-500/20">
+                    Save to Profile
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Column 3: Pomodoro Focus Timer with Synth Sound -->
+          <div class="space-y-6">
+            <div class="glass-card p-6 rounded-2xl text-center space-y-6 relative overflow-hidden border border-brand-500/30">
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 text-brand-300 text-xs font-semibold">
+                <i class="fa-solid fa-stopwatch text-brand-400"></i> Pomodoro Focus Station
+              </div>
+
+              <!-- Time Display -->
+              <div class="relative py-4">
+                <span id="timer-display" class="text-6xl font-black font-mono tracking-wider text-white">25:00</span>
+                <p id="timer-status" class="text-xs text-slate-400 mt-2 font-medium">Ready to start focus study block</p>
+              </div>
+
+              <!-- Timer Controls -->
+              <div class="flex items-center justify-center gap-3">
+                <button onclick="toggleTimer()" id="timer-start-btn" class="py-3 px-6 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-brand-500/30 flex items-center gap-2">
+                  <i id="timer-btn-icon" class="fa-solid fa-play"></i>
+                  <span id="timer-btn-text">Start Focus (+50 XP)</span>
+                </button>
+                <button onclick="resetTimer()" class="p-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm transition">
+                  <i class="fa-solid fa-rotate-left"></i>
+                </button>
+              </div>
+
+              <!-- Time Presets & Sound Toggle -->
+              <div class="pt-4 border-t border-slate-800 flex flex-col gap-3">
+                <div class="flex justify-center gap-2">
+                  <button onclick="setTimerDuration(25)" class="px-3 py-1.5 bg-slate-900 border border-slate-800 hover:border-brand-500 text-xs font-semibold rounded-lg text-slate-300 transition">25m Standard</button>
+                  <button onclick="setTimerDuration(50)" class="px-3 py-1.5 bg-slate-900 border border-slate-800 hover:border-brand-500 text-xs font-semibold rounded-lg text-slate-300 transition">50m Deep Work</button>
+                  <button onclick="setTimerDuration(5)" class="px-3 py-1.5 bg-slate-900 border border-slate-800 hover:border-brand-500 text-xs font-semibold rounded-lg text-slate-300 transition">5m Break</button>
+                </div>
+
+                <!-- Synth Sound Toggle -->
+                <div class="flex items-center justify-between px-3 py-2 bg-slate-900/60 rounded-xl text-xs">
+                  <span class="text-slate-400 font-medium flex items-center gap-1.5">
+                    <i class="fa-solid fa-headphones text-brand-400"></i> Ambient Focus Noise
+                  </span>
+                  <button onclick="toggleWhiteNoise()" id="noise-toggle-btn" class="px-2.5 py-1 rounded bg-slate-800 text-slate-300 hover:text-white transition text-[11px]">
+                    OFF
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Exam Countdown Card -->
+            <div class="glass-card p-6 rounded-2xl space-y-4">
+              <div class="flex justify-between items-center">
+                <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                  <i class="fa-solid fa-hourglass-half text-amber-400"></i>
+                  Upcoming Exam Target
+                </h3>
+                <button onclick="openExamModal()" class="text-xs text-brand-400 hover:text-brand-300 font-medium">+ Set Target</button>
+              </div>
+
+              <div id="exam-countdown-box" class="bg-slate-900/80 border border-slate-800 p-4 rounded-xl text-center space-y-2">
+                <h4 id="exam-title-display" class="font-bold text-slate-200 text-sm">Data Structures Midterm</h4>
+                <div class="grid grid-cols-4 gap-2 text-center py-2">
+                  <div class="bg-slate-950 p-2 rounded-lg">
+                    <span id="cd-days" class="text-xl font-black text-amber-400 font-mono">04</span>
+                    <p class="text-[9px] text-slate-500 uppercase">Days</p>
+                  </div>
+                  <div class="bg-slate-950 p-2 rounded-lg">
+                    <span id="cd-hours" class="text-xl font-black text-amber-400 font-mono">14</span>
+                    <p class="text-[9px] text-slate-500 uppercase">Hours</p>
+                  </div>
+                  <div class="bg-slate-950 p-2 rounded-lg">
+                    <span id="cd-mins" class="text-xl font-black text-amber-400 font-mono">32</span>
+                    <p class="text-[9px] text-slate-500 uppercase">Mins</p>
+                  </div>
+                  <div class="bg-slate-950 p-2 rounded-lg">
+                    <span id="cd-secs" class="text-xl font-black text-amber-400 font-mono">45</span>
+                    <p class="text-[9px] text-slate-500 uppercase">Secs</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- TAB 4: BUDGET & EXPENSES -->
+      <section id="tab-budget" class="tab-content p-6 space-y-6 hidden">
+        
+        <!-- Budget Limits Header Alert -->
+        <div class="glass-card p-6 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 border border-emerald-500/20">
+          <div>
+            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-wallet text-emerald-400"></i>
+              Student Smart Budget Tracker
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">Track monthly allowances, log expenses, enforce daily limits, and save for goals.</p>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="text-right">
+              <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Daily Safe Spend Limit</span>
+              <span id="daily-spend-limit-display" class="text-xl font-black text-emerald-400">$25.00 / day</span>
+            </div>
+            <button onclick="openSetBudgetModal()" class="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs transition">
+              <i class="fa-solid fa-gear"></i> Set Limit
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- Expense Logging Form & Recent Items -->
+          <div class="lg:col-span-2 space-y-6">
+            
+            <!-- Log Expense Form -->
+            <div class="glass-card p-6 rounded-2xl space-y-4">
+              <h3 class="font-bold text-white text-sm">Quick Log Expense</h3>
+              <form onsubmit="handleLogExpense(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <input type="text" id="expense-title" placeholder="Description (e.g., Campus Coffee)" required class="bg-slate-900 border border-slate-800 text-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand-500">
+                <input type="number" step="0.01" id="expense-amount" placeholder="Amount ($)" required class="bg-slate-900 border border-slate-800 text-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand-500">
+                <select id="expense-category" class="bg-slate-900 border border-slate-800 text-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand-500">
+                  <option value="Food">Food & Dining</option>
+                  <option value="Rent">Rent & Housing</option>
+                  <option value="Books">Books & Supplies</option>
+                  <option value="Transport">Transport</option>
+                  <option value="Tech">Tech & Subscriptions</option>
+                </select>
+                <button type="submit" class="sm:col-span-3 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-xs transition shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2">
+                  <i class="fa-solid fa-plus-circle"></i> Add Expense Log
+                </button>
+              </form>
+            </div>
+
+            <!-- Expense History List -->
+            <div class="glass-card p-6 rounded-2xl space-y-4">
+              <h3 class="font-bold text-white text-sm">Recent Expenses</h3>
+              <div id="expense-history-list" class="space-y-2 max-h-80 overflow-y-auto pr-1">
+                <!-- Dynamically populated expenses -->
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Savings Goal & XP Reward Card -->
+          <div class="space-y-6">
+            <div class="glass-card p-6 rounded-2xl space-y-4 border border-amber-500/20">
+              <div class="flex items-center justify-between">
+                <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                  <i class="fa-solid fa-piggy-bank text-amber-400"></i>
+                  Savings Goal (+100 XP)
+                </h3>
+                <span id="savings-percent" class="text-xs font-mono font-bold text-amber-400">65%</span>
+              </div>
+
+              <div class="space-y-2">
+                <div class="flex justify-between text-xs">
+                  <span id="savings-title-display" class="text-slate-300 font-medium">New Laptop Fund</span>
+                  <span class="text-slate-400"><span id="savings-current">$325</span> / $<span id="savings-target">500</span></span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden">
+                  <div id="savings-bar" class="bg-amber-500 h-3 rounded-full transition-all duration-500" style="width: 65%"></div>
+                </div>
+              </div>
+
+              <!-- Quick Deposit Action -->
+              <form onsubmit="handleDepositSavings(event)" class="flex gap-2 pt-2">
+                <input type="number" id="savings-deposit-amt" placeholder="Deposit ($)" required class="flex-1 bg-slate-900 border border-slate-800 text-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-amber-500">
+                <button type="submit" class="py-2 px-4 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold rounded-xl text-xs transition">
+                  Deposit
+                </button>
+              </form>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- TAB 5: HABITS & STICKY NOTES -->
+      <section id="tab-habits" class="tab-content p-6 space-y-6 hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          <!-- Daily Habit Builder -->
+          <div class="glass-card p-6 rounded-2xl space-y-4">
+            <div class="flex justify-between items-center">
+              <div>
+                <h3 class="font-extrabold text-white text-lg flex items-center gap-2">
+                  <i class="fa-solid fa-circle-check text-rose-400"></i>
+                  Daily Habit Check-in
+                </h3>
+                <p class="text-xs text-slate-400">Check off daily habits to boost your daily streak & earn +15 XP per habit.</p>
+              </div>
+            </div>
+
+            <!-- Habits List -->
+            <div id="habits-list-container" class="space-y-3">
+              <!-- Dynamically populated habits -->
+            </div>
+
+            <form onsubmit="handleAddHabit(event)" class="flex gap-2 pt-2">
+              <input type="text" id="habit-input" placeholder="New habit (e.g., Read 20 mins research paper)" required class="flex-1 bg-slate-900 border border-slate-800 text-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-rose-500">
+              <button type="submit" class="py-2 px-4 bg-rose-600 hover:bg-rose-500 text-white font-semibold rounded-xl text-xs transition shadow-lg shadow-rose-500/20">
+                Add Habit
+              </button>
+            </form>
+          </div>
+
+          <!-- Sticky Notes / Scratchpad -->
+          <div class="glass-card p-6 rounded-2xl space-y-4">
+            <div class="flex justify-between items-center">
+              <h3 class="font-extrabold text-white text-lg flex items-center gap-2">
+                <i class="fa-solid fa-note-sticky text-amber-300"></i>
+                Persistent Scratchpad Notes
+              </h3>
+              <button onclick="saveScratchpadNotes()" class="py-1.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold transition">
+                <i class="fa-solid fa-floppy-disk text-brand-400"></i> Auto-Saved
+              </button>
+            </div>
+
+            <textarea id="scratchpad-text" oninput="saveScratchpadNotes()" placeholder="Type lecture notes, quick code snippets, or assignment reminders here..." class="w-full h-64 bg-slate-900/90 border border-slate-800 text-slate-200 rounded-xl p-4 text-xs font-mono focus:outline-none focus:border-brand-500 resize-none leading-relaxed"></textarea>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL: ADD TASK -->
+  <div id="modal-task" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="glass-card p-6 rounded-2xl max-w-md w-full space-y-4 border border-slate-700">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-white text-base">Add New Assignment / Task</h3>
+        <button onclick="closeModal('modal-task')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form onsubmit="handleAddTaskSubmit(event)" class="space-y-3">
+        <div>
+          <label class="text-[11px] font-semibold uppercase text-slate-400 block mb-1">Task Title</label>
+          <input type="text" id="task-title-input" placeholder="e.g. Algorithms Assignment 2" required class="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand-500">
+        </div>
+
+        <div>
+          <label class="text-[11px] font-semibold uppercase text-slate-400 block mb-1">Eisenhower Priority Tier</label>
+          <select id="task-priority-input" class="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand-500">
+            <option value="urgent">🔥 Urgent & Important (+25 XP)</option>
+            <option value="high">⚡ High Priority (+20 XP)</option>
+            <option value="medium">📘 Medium Priority (+15 XP)</option>
+            <option value="low">☕ Low Priority (+10 XP)</option>
+          </select>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('modal-task')" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-brand-500/20">Save Task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: SET BUDGET LIMIT -->
+  <div id="modal-budget" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="glass-card p-6 rounded-2xl max-w-md w-full space-y-4 border border-slate-700">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-white text-base">Configure Daily Spend Limit</h3>
+        <button onclick="closeModal('modal-budget')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form onsubmit="handleSaveBudgetLimit(event)" class="space-y-3">
+        <div>
+          <label class="text-[11px] font-semibold uppercase text-slate-400 block mb-1">Daily Limit ($)</label>
+          <input type="number" step="1" id="daily-limit-input" placeholder="25" required class="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500">
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('modal-budget')" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold">Update Limit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- FIREBASE MODULE & MAIN LOGIC -->
+  <script type="module">
+    // Import Firebase v11.6.1 SDK
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithCustomToken, signInAnonymously, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Global Constants
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'uniquest-pro-default';
+    const firebaseConfig = {
+      apiKey: "AIzaSyAt6iRwaqDZNB2fyOhNIjcPPYFQM5cIpIQ",
+      authDomain: "uniquest-291d5.firebaseapp.com",
+      projectId: "uniquest-291d5",
+      storageBucket: "uniquest-291d5.firebasestorage.app",
+      messagingSenderId: "757544024221",
+      appId: "1:757544024221:web:cd6af64835ad5a76967c74",
+      measurementId: "G-8JGMKEGGXG"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Global State
+    window.state = {
+      currentUser: null,
+      isConfigured: false,
+      leaderboardScope: 'semester', // 'semester', 'course', 'global'
+      userProfile: {
+        name: 'Scholar Student',
+        email: 'guest@student.edu',
+        photo: 'https://placehold.co/100x100/6366f1/ffffff?text=U',
+        course: 'Computer Science',
+        semester: 'Semester 1',
+        xp: 1250,
+        level: 2,
+        streak: 3,
+        dailyLimit: 25,
+        gpa: 3.85
+      },
+      tasks: [
+        { id: '1', title: 'Data Structures Assignment 2', priority: 'urgent', completed: false },
+        { id: '2', title: 'Linear Algebra Problem Set', priority: 'high', completed: false },
+        { id: '3', title: 'Read Research Paper on AI', priority: 'medium', completed: true }
+      ],
+      expenses: [
+        { id: 'e1', title: 'Morning Campus Coffee', amount: 4.50, category: 'Food', date: 'Today' },
+        { id: 'e2', title: 'Python Reference Book', amount: 18.00, category: 'Books', date: 'Yesterday' }
+      ],
+      savings: { title: 'New Laptop Fund', current: 325, target: 500 },
+      habits: [
+        { id: 'h1', title: 'Review Lecture Slides', completed: true },
+        { id: 'h2', title: 'Code for 45 minutes', completed: false },
+        { id: 'h3', title: 'Drink 2L Water', completed: true }
+      ],
+      gpaCourses: [
+        { id: 'g1', name: 'Data Structures', grade: 'A', credits: 4 },
+        { id: 'g2', name: 'Calculus II', grade: 'A-', credits: 3 },
+        { id: 'g3', name: 'Physics I', grade: 'B+', credits: 3 }
+      ],
+      notes: 'Sticky scratchpad notes persist across sessions.',
+      allStudents: []
+    };
+
+    // Firebase Auth Handlers
+    window.signInWithGoogle = async () => {
+      try {
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+        // Keep the signed-in session after the browser is refreshed.
+        await setPersistence(auth, browserLocalPersistence);
+        await signInWithPopup(auth, provider);
+      } catch (err) {
+        console.error("Google Auth error:", err);
+        const message = err.code === 'auth/unauthorized-domain'
+          ? 'This website domain is not authorized in Firebase Authentication. Add it under Authentication settings > Authorized domains.'
+          : err.code === 'auth/operation-not-allowed'
+            ? 'Google sign-in is not enabled. Enable Google under Firebase Authentication > Sign-in method.'
+            : err.code === 'auth/popup-blocked'
+              ? 'Your browser blocked the Google sign-in popup. Allow popups for this site and try again.'
+            : err.code === 'auth/popup-closed-by-user'
+              ? 'Google sign-in was cancelled. Please try again.'
+              : `Google sign-in failed (${err.code || 'unknown error'}). Check your Firebase Authentication settings and try again.`;
+        document.getElementById('gate-subtitle').innerText = message;
+      }
+    };
+
+    window.proceedAsGuest = async () => {
+      try {
+        if (!auth.currentUser) {
+          await signInAnonymously(auth);
+        }
+        showSetupStep();
+      } catch(e) {
+        showSetupStep();
+      }
+    };
+
+    function showSetupStep() {
+      document.getElementById('gate-step-signin').classList.add('hidden');
+      document.getElementById('gate-step-setup').classList.remove('hidden');
+      document.getElementById('gate-subtitle').innerText = "Personalize your scholar profile and select your course program.";
+    }
+
+    window.completeSetupAndLaunch = async () => {
+      const nameInput = document.getElementById('setup-name-input').value.trim();
+      if (nameInput) {
+        window.state.userProfile.name = nameInput;
+      }
+      window.state.userProfile.course = document.getElementById('setup-course-input').value;
+      window.state.userProfile.semester = document.getElementById('setup-semester-input').value;
+      window.state.isConfigured = true;
+
+      // Hide gate overlay & unlock app
+      document.getElementById('setup-gate-overlay').classList.add('hidden');
+      document.getElementById('sidebar-nav-links').classList.remove('opacity-40', 'pointer-events-none');
+      document.getElementById('header-selectors-container').classList.remove('opacity-50', 'pointer-events-none');
+
+      await syncUserProfileToFirestore();
+      listenToPublicCohortData();
+      renderAppUI();
+    };
+
+    window.handleSignOut = async () => {
+      try {
+        await signOut(auth);
+        window.location.reload();
+      } catch(e) {
+        console.error("Sign out error", e);
+      }
+    };
+
+    // Initialize Auth Listener
+    const initAuth = async () => {
+      // Persist normal browser sign-in sessions for this website.
+      try {
+        await setPersistence(auth, browserLocalPersistence);
+      } catch (e) {
+        console.warn("Could not set Firebase auth persistence:", e);
+      }
+
+      if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+        try {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } catch (e) {
+          await signInAnonymously(auth);
+        }
+      }
+
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          window.state.currentUser = user;
+          document.getElementById('auth-unauthenticated').classList.add('hidden');
+          document.getElementById('top-auth-btn').classList.add('hidden');
+          document.getElementById('auth-authenticated').classList.remove('hidden');
+
+          if (user.displayName) {
+            window.state.userProfile.name = user.displayName;
+            document.getElementById('setup-name-input').value = user.displayName;
+          }
+          if (user.email) {
+            window.state.userProfile.email = user.email;
+          }
+          if (user.photoURL) {
+            window.state.userProfile.photo = user.photoURL;
+          }
+
+          // If already signed in, show setup step
+          showSetupStep();
+        } else {
+          // Stay on blank gate
+        }
+      });
+    };
+
+    // RULE 1 - Strict Public Path: /artifacts/{appId}/public/data/users
+    const syncUserProfileToFirestore = async () => {
+      if (!window.state.currentUser || !window.state.isConfigured) return;
+      const userId = window.state.currentUser.uid;
+      const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', userId);
+
+      const userPayload = {
+        uid: userId,
+        name: window.state.userProfile.name,
+        email: window.state.userProfile.email,
+        photo: window.state.userProfile.photo,
+        course: window.state.userProfile.course,
+        semester: window.state.userProfile.semester,
+        xp: window.state.userProfile.xp,
+        level: calculateLevel(window.state.userProfile.xp),
+        streak: window.state.userProfile.streak,
+        lastActive: new Date().toISOString()
+      };
+
+      try {
+        await setDoc(userRef, userPayload, { merge: true });
+      } catch(e) {
+        console.error("Firestore sync error:", e);
+      }
+    };
+
+    // RULE 2 - Fetch all public data without complex queries, filter in memory
+    const listenToPublicCohortData = () => {
+      const publicUsersCol = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+      
+      onSnapshot(publicUsersCol, (snapshot) => {
+        const studentsList = [];
+        snapshot.forEach((doc) => {
+          studentsList.push(doc.data());
+        });
+        window.state.allStudents = studentsList;
+        renderLeaderboardUI();
+      }, (err) => {
+        console.error("Snapshot error:", err);
+        generateMockStudents();
+        renderLeaderboardUI();
+      });
+    };
+
+    // Generate Mock Cohort Data if single offline demo user
+    function generateMockStudents() {
+      const mockList = [
+        { uid: 'm1', name: 'Alex Rivera', photo: 'https://placehold.co/100x100/f59e0b/ffffff?text=AR', course: 'Computer Science', semester: 'Semester 1', xp: 2450, level: 5, streak: 12 },
+        { uid: 'm2', name: 'Sophia Chen', photo: 'https://placehold.co/100x100/ec4899/ffffff?text=SC', course: 'Computer Science', semester: 'Semester 1', xp: 1890, level: 4, streak: 8 },
+        { uid: 'm3', name: 'Marcus Vance', photo: 'https://placehold.co/100x100/3b82f6/ffffff?text=MV', course: 'Computer Science', semester: 'Semester 1', xp: 1420, level: 3, streak: 5 },
+        { uid: 'm4', name: 'Elena Rostova', photo: 'https://placehold.co/100x100/10b981/ffffff?text=ER', course: 'Software Engineering', semester: 'Semester 2', xp: 3100, level: 6, streak: 15 },
+        { uid: 'm5', name: 'David Kim', photo: 'https://placehold.co/100x100/8b5cf6/ffffff?text=DK', course: 'Computer Science', semester: 'Semester 2', xp: 980, level: 2, streak: 2 }
+      ];
+
+      // Add active state user if configured
+      if (window.state.currentUser && window.state.isConfigured) {
+        mockList.push({
+          uid: window.state.currentUser.uid,
+          name: window.state.userProfile.name,
+          photo: window.state.userProfile.photo,
+          course: window.state.userProfile.course,
+          semester: window.state.userProfile.semester,
+          xp: window.state.userProfile.xp,
+          level: calculateLevel(window.state.userProfile.xp),
+          streak: window.state.userProfile.streak
+        });
+      }
+
+      window.state.allStudents = mockList;
+    }
+
+    // Level progression calculator
+    function calculateLevel(xp) {
+      return Math.floor(xp / 300) + 1;
+    }
+
+    function getLevelTitle(level) {
+      if (level < 2) return 'Level 1: Freshman';
+      if (level < 5) return 'Level ' + level + ': Apprentice';
+      if (level < 10) return 'Level ' + level + ': Scholar Specialist';
+      if (level < 15) return 'Level ' + level + ': Dean List Master';
+      return 'Level ' + level + ': Campus Legend';
+    }
+
+    // Award XP and trigger confetti on level up
+    window.awardXP = async (amount, reason) => {
+      const oldLevel = calculateLevel(window.state.userProfile.xp);
+      window.state.userProfile.xp += amount;
+      const newLevel = calculateLevel(window.state.userProfile.xp);
+
+      if (newLevel > oldLevel) {
+        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+      }
+
+      await syncUserProfileToFirestore();
+      renderAppUI();
+    };
+
+    // Render Full App UI
+    window.renderAppUI = () => {
+      if (!window.state.isConfigured) return;
+
+      // Sidebar Auth UI
+      document.getElementById('user-avatar').src = window.state.userProfile.photo;
+      document.getElementById('user-display-name').innerText = window.state.userProfile.name;
+      document.getElementById('user-email').innerText = window.state.userProfile.email;
+      document.getElementById('user-xp-nav').innerText = `${window.state.userProfile.xp} XP`;
+      document.getElementById('user-level-badge').innerText = `Lvl ${calculateLevel(window.state.userProfile.xp)}`;
+
+      // Top Selector Setup
+      document.getElementById('course-selector-top').value = window.state.userProfile.course;
+      document.getElementById('semester-selector-top').value = window.state.userProfile.semester;
+
+      // Hero Banner
+      document.getElementById('hero-course-sem-label').innerText = `${window.state.userProfile.course} • ${window.state.userProfile.semester}`;
+      document.getElementById('hero-user-name').innerText = window.state.userProfile.name;
+      document.getElementById('hero-xp-display').innerText = window.state.userProfile.xp;
+
+      // Stats
+      const level = calculateLevel(window.state.userProfile.xp);
+      document.getElementById('dash-level-title').innerText = getLevelTitle(level);
+      document.getElementById('dash-level-num').innerText = `Lvl ${level}`;
+      const progressXP = (window.state.userProfile.xp % 300) / 3;
+      document.getElementById('dash-xp-progress-bar').style.width = `${progressXP}%`;
+      document.getElementById('dash-xp-next').innerText = `${300 - (window.state.userProfile.xp % 300)} XP to Next Level`;
+      document.getElementById('dash-streak-count').innerText = `${window.state.userProfile.streak} Days`;
+      document.getElementById('dash-gpa-display').innerText = window.state.userProfile.gpa.toFixed(2);
+
+      // Render Sub-components
+      renderEisenhowerMatrix();
+      renderExpensesUI();
+      renderHabitsUI();
+      renderGPAUI();
+      renderLeaderboardUI();
+    };
+
+    // Academic & Semester Picker Updates
+    window.updateAcademicSettings = async () => {
+      window.state.userProfile.course = document.getElementById('course-selector-top').value;
+      window.state.userProfile.semester = document.getElementById('semester-selector-top').value;
+      await syncUserProfileToFirestore();
+      renderAppUI();
+    };
+
+    // Render Realtime Leaderboard Filtered by Scope
+    window.renderLeaderboardUI = () => {
+      let filtered = [...window.state.allStudents];
+      const userCourse = window.state.userProfile.course;
+      const userSem = window.state.userProfile.semester;
+
+      if (window.state.leaderboardScope === 'semester') {
+        filtered = filtered.filter(s => s.course === userCourse && s.semester === userSem);
+        document.getElementById('leaderboard-table-title').innerText = `Leaderboard: ${userCourse} (${userSem})`;
+      } else if (window.state.leaderboardScope === 'course') {
+        filtered = filtered.filter(s => s.course === userCourse);
+        document.getElementById('leaderboard-table-title').innerText = `Leaderboard: ${userCourse} (All Semesters)`;
+      } else {
+        document.getElementById('leaderboard-table-title').innerText = `Global Campus Leaderboard (All Students)`;
+      }
+
+      // Sort by XP Descending
+      filtered.sort((a, b) => (b.xp || 0) - (a.xp || 0));
+
+      // Calculate Current User Rank
+      const userIndex = filtered.findIndex(s => s.email === window.state.userProfile.email || s.name === window.state.userProfile.name);
+      const myRank = userIndex !== -1 ? userIndex + 1 : 1;
+      document.getElementById('hero-rank-display').innerText = `#${myRank}`;
+      document.getElementById('rank-badge-nav').innerText = `#${myRank}`;
+      document.getElementById('leaderboard-count').innerText = `${filtered.length} Students Ranked`;
+
+      // Top 3 Podium Setup
+      const top1 = filtered[0] || { name: 'None', xp: 0, photo: 'https://placehold.co/100x100/1e293b/ffffff?text=1', semester: '--' };
+      const top2 = filtered[1] || { name: 'None', xp: 0, photo: 'https://placehold.co/100x100/1e293b/ffffff?text=2', semester: '--' };
+      const top3 = filtered[2] || { name: 'None', xp: 0, photo: 'https://placehold.co/100x100/1e293b/ffffff?text=3', semester: '--' };
+
+      document.getElementById('podium-1-name').innerText = top1.name;
+      document.getElementById('podium-1-xp').innerText = top1.xp;
+      document.getElementById('podium-1-img').src = top1.photo;
+      document.getElementById('podium-1-course').innerText = `${top1.course || ''} ${top1.semester || ''}`;
+
+      document.getElementById('podium-2-name').innerText = top2.name;
+      document.getElementById('podium-2-xp').innerText = top2.xp;
+      document.getElementById('podium-2-img').src = top2.photo;
+      document.getElementById('podium-2-course').innerText = `${top2.course || ''} ${top2.semester || ''}`;
+
+      document.getElementById('podium-3-name').innerText = top3.name;
+      document.getElementById('podium-3-xp').innerText = top3.xp;
+      document.getElementById('podium-3-img').src = top3.photo;
+      document.getElementById('podium-3-course').innerText = `${top3.course || ''} ${top3.semester || ''}`;
+
+      // Dashboard Top 3 Preview
+      const dashTopList = document.getElementById('dash-top-students-list');
+      dashTopList.innerHTML = filtered.slice(0, 3).map((st, idx) => `
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/80">
+          <div class="flex items-center gap-3">
+            <span class="font-bold text-xs font-mono w-5 text-center ${idx === 0 ? 'text-amber-400' : 'text-slate-400'}">#${idx + 1}</span>
+            <img src="${st.photo}" class="w-8 h-8 rounded-lg object-cover">
+            <div>
+              <h5 class="text-xs font-bold text-slate-100">${st.name}</h5>
+              <p class="text-[10px] text-slate-400">${st.semester || 'Sem 1'}</p>
+            </div>
+          </div>
+          <span class="text-xs font-mono font-bold text-amber-400">${st.xp} XP</span>
+        </div>
+      `).join('');
+
+      // Leaderboard Table Body
+      const tbody = document.getElementById('leaderboard-table-body');
+      tbody.innerHTML = filtered.map((st, index) => {
+        const isMe = st.email === window.state.userProfile.email || st.name === window.state.userProfile.name;
+        return `
+          <tr class="${isMe ? 'bg-brand-900/30 border-l-2 border-brand-500' : 'hover:bg-slate-900/40'} transition">
+            <td class="p-4 text-center font-black font-mono ${index === 0 ? 'text-amber-400' : index === 1 ? 'text-slate-300' : index === 2 ? 'text-amber-600' : 'text-slate-400'}">
+              #${index + 1}
+            </td>
+            <td class="p-4 flex items-center gap-3">
+              <img src="${st.photo}" class="w-8 h-8 rounded-xl object-cover ring-1 ring-slate-700">
+              <div>
+                <div class="font-bold text-slate-100 flex items-center gap-2">
+                  ${st.name}
+                  ${isMe ? '<span class="text-[9px] bg-brand-500/20 text-brand-300 px-1.5 py-0.2 rounded">YOU</span>' : ''}
+                </div>
+                <div class="text-[10px] text-slate-400">${st.email || 'Student'}</div>
+              </div>
+            </td>
+            <td class="p-4 text-slate-300">
+              <div>${st.course || 'Computer Science'}</div>
+              <div class="text-[10px] text-slate-500">${st.semester || 'Semester 1'}</div>
+            </td>
+            <td class="p-4 text-center font-mono font-bold text-indigo-400">
+              Lvl ${st.level || calculateLevel(st.xp || 0)}
+            </td>
+            <td class="p-4 text-center font-mono text-amber-400">
+              <i class="fa-solid fa-flame text-[10px]"></i> ${st.streak || 1}d
+            </td>
+            <td class="p-4 text-right font-mono font-black text-amber-400">
+              ${st.xp || 0} XP
+            </td>
+          </tr>
+        `;
+      }).join('');
+    };
+
+    window.setLeaderboardScope = (scope) => {
+      window.state.leaderboardScope = scope;
+      ['semester', 'course', 'global'].forEach(s => {
+        const btn = document.getElementById(`scope-btn-${s}`);
+        if (s === scope) {
+          btn.className = 'px-4 py-2 text-xs font-semibold rounded-lg transition bg-brand-600 text-white';
+        } else {
+          btn.className = 'px-4 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition';
+        }
+      });
+      renderLeaderboardUI();
+    };
+
+    // Eisenhower Task Board Rendering
+    function renderEisenhowerMatrix() {
+      const lists = { urgent: [], high: [], medium: [], low: [] };
+      window.state.tasks.forEach(t => {
+        if (lists[t.priority]) lists[t.priority].push(t);
+      });
+
+      ['urgent', 'high', 'medium', 'low'].forEach(p => {
+        document.getElementById(`count-${p}`).innerText = lists[p].length;
+        const container = document.getElementById(`list-${p}`);
+        if (lists[p].length === 0) {
+          container.innerHTML = `<p class="text-[11px] text-slate-500 italic py-2">No tasks in this tier</p>`;
+        } else {
+          container.innerHTML = lists[p].map(t => `
+            <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 text-xs">
+              <span class="${t.completed ? 'line-through text-slate-500' : 'text-slate-200'} font-medium truncate flex-1 pr-2">${t.title}</span>
+              <button onclick="toggleTaskComplete('${t.id}')" class="${t.completed ? 'text-emerald-400' : 'text-slate-500 hover:text-emerald-400'} transition">
+                <i class="fa-solid ${t.completed ? 'fa-circle-check' : 'fa-circle'}"></i>
+              </button>
+            </div>
+          `).join('');
+        }
+      });
+
+      // Quick Tasks List on Main Dashboard
+      const dashTasks = document.getElementById('dash-tasks-container');
+      const activeTasks = window.state.tasks.filter(t => !t.completed).slice(0, 4);
+      if (activeTasks.length === 0) {
+        dashTasks.innerHTML = `<div class="p-4 text-center text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">All tasks completed! Great work scholar!</div>`;
+      } else {
+        dashTasks.innerHTML = activeTasks.map(t => `
+          <div class="flex items-center justify-between p-3 rounded-xl bg-slate-900/60 border border-slate-800">
+            <div class="flex items-center gap-3">
+              <div class="w-2 h-2 rounded-full ${t.priority === 'urgent' ? 'bg-rose-500' : t.priority === 'high' ? 'bg-amber-500' : 'bg-indigo-500'}"></div>
+              <span class="font-medium text-xs text-slate-200">${t.title}</span>
+            </div>
+            <button onclick="toggleTaskComplete('${t.id}')" class="text-xs text-brand-400 hover:text-brand-300 font-semibold flex items-center gap-1">
+              <span>Complete</span>
+              <i class="fa-solid fa-check"></i>
+            </button>
+          </div>
+        `).join('');
+      }
+    }
+
+    window.toggleTaskComplete = (id) => {
+      const task = window.state.tasks.find(t => t.id === id);
+      if (task) {
+        task.completed = !task.completed;
+        if (task.completed) {
+          window.awardXP(25, 'Task Completion');
+        } else {
+          renderAppUI();
+        }
+      }
+    };
+
+    window.handleAddTaskSubmit = (e) => {
+      e.preventDefault();
+      const title = document.getElementById('task-title-input').value;
+      const priority = document.getElementById('task-priority-input').value;
+      window.state.tasks.push({
+        id: Date.now().toString(),
+        title,
+        priority,
+        completed: false
+      });
+      closeModal('modal-task');
+      renderAppUI();
+    };
+
+    // Pomodoro Timer Logic with Tone.js Synth Audio
+    let timerInterval = null;
+    let timerSeconds = 25 * 60;
+    let timerRunning = false;
+    let synth = null;
+    let isNoiseOn = false;
+
+    window.setTimerDuration = (mins) => {
+      if (timerRunning) toggleTimer();
+      timerSeconds = mins * 60;
+      updateTimerDisplay();
+    };
+
+    function updateTimerDisplay() {
+      const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+      const s = (timerSeconds % 60).toString().padStart(2, '0');
+      document.getElementById('timer-display').innerText = `${m}:${s}`;
+    }
+
+    window.toggleTimer = () => {
+      timerRunning = !timerRunning;
+      const btnText = document.getElementById('timer-btn-text');
+      const btnIcon = document.getElementById('timer-btn-icon');
+      const statusText = document.getElementById('timer-status');
+
+      if (timerRunning) {
+        btnText.innerText = 'Pause Focus Session';
+        btnIcon.className = 'fa-solid fa-pause';
+        statusText.innerText = 'Focus session in progress... Stay in the zone!';
+
+        timerInterval = setInterval(() => {
+          if (timerSeconds > 0) {
+            timerSeconds--;
+            updateTimerDisplay();
+          } else {
+            clearInterval(timerInterval);
+            timerRunning = false;
+            btnText.innerText = 'Start Focus (+50 XP)';
+            btnIcon.className = 'fa-solid fa-play';
+            statusText.innerText = 'Session completed! +50 XP Awarded!';
+            window.awardXP(50, 'Completed Pomodoro Focus Session');
+          }
+        }, 1000);
+      } else {
+        clearInterval(timerInterval);
+        btnText.innerText = 'Resume Focus Session';
+        btnIcon.className = 'fa-solid fa-play';
+        statusText.innerText = 'Session paused';
+      }
+    };
+
+    window.resetTimer = () => {
+      if (timerRunning) toggleTimer();
+      timerSeconds = 25 * 60;
+      updateTimerDisplay();
+      document.getElementById('timer-status').innerText = 'Ready to start focus study block';
+    };
+
+    // Tone.js Ambient Sound Synth Toggle
+    window.toggleWhiteNoise = async () => {
+      await Tone.start();
+      isNoiseOn = !isNoiseOn;
+      const noiseBtn = document.getElementById('noise-toggle-btn');
+
+      if (isNoiseOn) {
+        if (!synth) {
+          synth = new Tone.Noise("pink").start();
+          const filter = new Tone.AutoFilter({ frequency: "8n", baseFrequency: 200, octaves: 4 }).toDestination().start();
+          synth.connect(filter);
+          synth.volume.value = -20;
+        } else {
+          synth.start();
+        }
+        noiseBtn.innerText = 'ON';
+        noiseBtn.className = 'px-2.5 py-1 rounded bg-emerald-600 text-white transition text-[11px] font-bold';
+      } else {
+        if (synth) synth.stop();
+        noiseBtn.innerText = 'OFF';
+        noiseBtn.className = 'px-2.5 py-1 rounded bg-slate-800 text-slate-300 hover:text-white transition text-[11px]';
+      }
+    };
+
+    // Budget Tracker Logic
+    function renderExpensesUI() {
+      const todayTotal = window.state.expenses.reduce((acc, curr) => acc + curr.amount, 0);
+      const remaining = window.state.userProfile.dailyLimit - todayTotal;
+
+      document.getElementById('daily-spend-limit-display').innerText = `$${window.state.userProfile.dailyLimit.toFixed(2)} / day`;
+      document.getElementById('dash-budget-remaining').innerText = `$${Math.max(0, remaining).toFixed(2)}`;
+
+      const budgetWarning = document.getElementById('dash-budget-warning');
+      const budgetIcon = document.getElementById('budget-status-icon');
+
+      if (remaining < 0) {
+        budgetWarning.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Over daily budget limit!`;
+        budgetWarning.className = 'text-xs text-rose-400 mt-1 font-medium';
+        budgetIcon.className = 'w-8 h-8 rounded-lg bg-rose-500/10 text-rose-400 flex items-center justify-center text-sm';
+      } else {
+        budgetWarning.innerHTML = `<i class="fa-solid fa-circle-check"></i> Within safe spending range`;
+        budgetWarning.className = 'text-xs text-emerald-400 mt-1 font-medium';
+        budgetIcon.className = 'w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-sm';
+      }
+
+      // Expense list render
+      const list = document.getElementById('expense-history-list');
+      if (window.state.expenses.length === 0) {
+        list.innerHTML = `<p class="text-xs text-slate-500 italic">No expenses logged yet.</p>`;
+      } else {
+        list.innerHTML = window.state.expenses.map(e => `
+          <div class="flex items-center justify-between p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-xs">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-emerald-400">
+                <i class="fa-solid fa-receipt"></i>
+              </div>
+              <div>
+                <h5 class="font-bold text-slate-200">${e.title}</h5>
+                <span class="text-[10px] text-slate-400">${e.category} • ${e.date}</span>
+              </div>
+            </div>
+            <span class="font-mono font-bold text-slate-200">-$${e.amount.toFixed(2)}</span>
+          </div>
+        `).join('');
+      }
+
+      // Savings Goal
+      const pct = Math.min(100, Math.round((window.state.savings.current / window.state.savings.target) * 100));
+      document.getElementById('savings-percent').innerText = `${pct}%`;
+      document.getElementById('savings-current').innerText = window.state.savings.current;
+      document.getElementById('savings-target').innerText = window.state.savings.target;
+      document.getElementById('savings-bar').style.width = `${pct}%`;
+    }
+
+    window.handleLogExpense = (e) => {
+      e.preventDefault();
+      const title = document.getElementById('expense-title').value;
+      const amount = parseFloat(document.getElementById('expense-amount').value);
+      const category = document.getElementById('expense-category').value;
+
+      window.state.expenses.unshift({
+        id: Date.now().toString(),
+        title,
+        amount,
+        category,
+        date: 'Today'
+      });
+
+      document.getElementById('expense-title').value = '';
+      document.getElementById('expense-amount').value = '';
+      renderAppUI();
+    };
+
+    window.handleDepositSavings = (e) => {
+      e.preventDefault();
+      const amt = parseFloat(document.getElementById('savings-deposit-amt').value);
+      if (amt > 0) {
+        window.state.savings.current += amt;
+        document.getElementById('savings-deposit-amt').value = '';
+        window.awardXP(100, 'Savings Deposit Goal Hit');
+      }
+    };
+
+    window.handleSaveBudgetLimit = (e) => {
+      e.preventDefault();
+      const limit = parseFloat(document.getElementById('daily-limit-input').value);
+      if (limit > 0) {
+        window.state.userProfile.dailyLimit = limit;
+        closeModal('modal-budget');
+        renderAppUI();
+      }
+    };
+
+    // Daily Habits UI
+    function renderHabitsUI() {
+      const container = document.getElementById('habits-list-container');
+      container.innerHTML = window.state.habits.map(h => `
+        <div class="flex items-center justify-between p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs">
+          <div class="flex items-center gap-3">
+            <button onclick="toggleHabit('${h.id}')" class="w-5 h-5 rounded-lg border ${h.completed ? 'bg-rose-500 border-rose-400 text-white' : 'border-slate-700'} flex items-center justify-center transition">
+              ${h.completed ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}
+            </button>
+            <span class="${h.completed ? 'line-through text-slate-500' : 'text-slate-200'} font-medium">${h.title}</span>
+          </div>
+          <span class="text-[10px] text-amber-400 font-mono">+15 XP</span>
+        </div>
+      `).join('');
+    }
+
+    window.toggleHabit = (id) => {
+      const habit = window.state.habits.find(h => h.id === id);
+      if (habit) {
+        habit.completed = !habit.completed;
+        if (habit.completed) window.awardXP(15, 'Habit Streak Check-in');
+        else renderAppUI();
+      }
+    };
+
+    window.handleAddHabit = (e) => {
+      e.preventDefault();
+      const title = document.getElementById('habit-input').value;
+      window.state.habits.push({ id: Date.now().toString(), title, completed: false });
+      document.getElementById('habit-input').value = '';
+      renderAppUI();
+    };
+
+    // GPA Calculator logic
+    function renderGPAUI() {
+      const container = document.getElementById('gpa-courses-list');
+      container.innerHTML = window.state.gpaCourses.map(g => `
+        <div class="flex items-center gap-2">
+          <input type="text" value="${g.name}" onchange="updateGPACourse('${g.id}', 'name', this.value)" class="flex-1 bg-slate-900 border border-slate-800 text-slate-200 rounded-xl px-3 py-1.5 text-xs">
+          <select onchange="updateGPACourse('${g.id}', 'grade', this.value)" class="bg-slate-900 border border-slate-800 text-slate-200 rounded-xl px-3 py-1.5 text-xs">
+            ${['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'F'].map(gr => `<option value="${gr}" ${g.grade === gr ? 'selected' : ''}>Grade ${gr}</option>`).join('')}
+          </select>
+          <input type="number" value="${g.credits}" min="1" max="6" onchange="updateGPACourse('${g.id}', 'credits', parseInt(this.value))" class="w-16 bg-slate-900 border border-slate-800 text-slate-200 rounded-xl px-3 py-1.5 text-xs">
+        </div>
+      `).join('');
+
+      calculateGPA();
+    }
+
+    const gradePoints = { 'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7, 'C+': 2.3, 'C': 2.0, 'F': 0.0 };
+
+    function calculateGPA() {
+      let totalPts = 0;
+      let totalCredits = 0;
+      window.state.gpaCourses.forEach(c => {
+        const pts = gradePoints[c.grade] || 4.0;
+        totalPts += pts * c.credits;
+        totalCredits += c.credits;
+      });
+      const gpa = totalCredits > 0 ? totalPts / totalCredits : 4.0;
+      document.getElementById('calculated-gpa').innerText = gpa.toFixed(2);
+      return gpa;
+    }
+
+    window.updateGPACourse = (id, field, val) => {
+      const course = window.state.gpaCourses.find(c => c.id === id);
+      if (course) {
+        course[field] = val;
+        renderGPAUI();
+      }
+    };
+
+    window.addGPACourseRow = () => {
+      window.state.gpaCourses.push({ id: Date.now().toString(), name: 'New Course', grade: 'A', credits: 3 });
+      renderGPAUI();
+    };
+
+    window.saveGPAToProfile = async () => {
+      window.state.userProfile.gpa = calculateGPA();
+      await syncUserProfileToFirestore();
+      renderAppUI();
+    };
+
+    // Scratchpad notes
+    window.saveScratchpadNotes = () => {
+      window.state.notes = document.getElementById('scratchpad-text').value;
+    };
+
+    // Countdown Timer logic
+    function initExamCountdown() {
+      setInterval(() => {
+        const now = new Date();
+        const examDate = new Date(now.getTime() + (4 * 24 * 60 * 60 * 1000) + (14 * 60 * 60 * 1000));
+        const diff = examDate - now;
+
+        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const m = Math.floor((diff / 1000 / 60) % 60);
+        const s = Math.floor((diff / 1000) % 60);
+
+        document.getElementById('cd-days').innerText = d.toString().padStart(2, '0');
+        document.getElementById('cd-hours').innerText = h.toString().padStart(2, '0');
+        document.getElementById('cd-mins').innerText = m.toString().padStart(2, '0');
+        document.getElementById('cd-secs').innerText = s.toString().padStart(2, '0');
+      }, 1000);
+    }
+
+    // Modal Helpers
+    window.openAddTaskModal = () => document.getElementById('modal-task').classList.remove('hidden');
+    window.openSetBudgetModal = () => document.getElementById('modal-budget').classList.remove('hidden');
+    window.openExamModal = () => alert("Setting an exam countdown target will be available in the upcoming term release!");
+    window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
+
+    // Tab Navigation
+    window.switchTab = (tabId) => {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+      const titleMap = {
+        dashboard: 'Dashboard Overview',
+        leaderboard: 'Cohort & Semester Leaderboards',
+        academic: 'Academic Matrix & Focus Station',
+        budget: 'Student Budget & Expenses',
+        habits: 'Habit Builder & Scratchpad Notes'
+      };
+      document.getElementById('page-title').innerText = titleMap[tabId] || 'Dashboard Overview';
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.className = 'nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all text-slate-400 hover:bg-slate-800/60 hover:text-white';
+      });
+      document.getElementById(`nav-${tabId}`).className = 'nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all text-white bg-brand-600/30 border border-brand-500/30';
+    };
+
+    // On Window Load
+    window.onload = () => {
+      initAuth();
+      initExamCountdown();
+    };
+  </script>
+</body>
+</html>
